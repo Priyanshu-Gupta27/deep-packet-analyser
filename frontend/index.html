@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1118">
+  <meta name="description" content="Analyze PCAP network captures with the Deep Packet Analyzer.">
+  <title>Deep Packet Analyzer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <section id="upload-screen" class="upload-screen">
+    <header class="public-header">
+      <a class="brand" href="/" aria-label="Deep Packet Analyzer home">
+        <span class="brand-mark" aria-hidden="true">D</span>
+        <span>Deep Packet <strong>Analyzer</strong></span>
+      </a>
+      <span id="engine-health" class="health-pill" role="status"><i></i> Checking analyzer</span>
+    </header>
+    <main class="upload-main">
+      <div class="intro-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span> NETWORK CAPTURE ANALYSIS</div>
+        <h1>Deep Packet<br><span>Inspection</span></h1>
+        <p>Analyze network captures and explore packets, protocols, flows, and traffic statistics.</p>
+      </div>
+      <form id="upload-form" class="upload-card">
+        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Choose or drop a PCAP capture file">
+          <span class="upload-symbol" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5"/></svg>
+          </span>
+          <strong>Drop your capture file here</strong>
+          <span class="drop-hint">or select a file from your device</span>
+          <label class="button button-outline" for="capture-file">Browse files</label>
+          <input id="capture-file" type="file" accept=".pcap,.pcapng,application/vnd.tcpdump.pcap" aria-label="Select PCAP file">
+        </div>
+        <div class="file-guidance">
+          <span><b class="format-icon">PCAP</b> .pcap supported</span>
+          <span><b class="format-icon muted">NG</b> .pcapng unsupported</span>
+          <span>Maximum 200 MB</span>
+        </div>
+        <div id="selected-file" class="selected-file" hidden>
+          <span class="file-icon" aria-hidden="true">PC</span>
+          <span class="file-meta"><strong id="selected-name"></strong><small id="selected-size"></small></span>
+          <button id="remove-file" class="icon-button" type="button" aria-label="Remove selected file">×</button>
+        </div>
+        <button id="analyze-button" class="button button-primary analyze-button" type="submit" disabled>Analyze capture <span aria-hidden="true">→</span></button>
+        <div id="upload-state" class="upload-state" role="status" aria-live="polite" hidden></div>
+      </form>
+      <div class="capability-row" aria-label="Analyzer capabilities">
+        <div><span class="capability-dot"></span> Real C++ packet analysis</div>
+        <div><span class="capability-dot"></span> Protocol identification</div>
+        <div><span class="capability-dot"></span> Flow analysis</div>
+      </div>
+      <p class="privacy-note"><span aria-hidden="true">⌑</span> Captures are processed by the local analysis server. Packet payloads are not displayed.</p>
+    </main>
+    <footer class="public-footer"><span>DEEP PACKET ANALYZER</span><span>PCAP ONLY · IPV4 PARSING</span></footer>
+  </section>
+
+  <div id="analysis-shell" class="app-shell" hidden>
+    <aside id="sidebar" class="sidebar" aria-label="Main navigation">
+      <a class="brand side-brand" href="/" aria-label="Deep Packet Analyzer home">
+        <span class="brand-mark" aria-hidden="true">D</span><span>Deep Packet<br><strong>Analyzer</strong></span>
+      </a>
+      <div class="side-section-label">ANALYSIS</div>
+      <nav class="side-nav">
+        <a href="#overview" data-view-link="overview" class="nav-link"><span class="nav-icon" aria-hidden="true">◫</span> Overview</a>
+        <a href="#packets" data-view-link="packets" class="nav-link"><span class="nav-icon" aria-hidden="true">▤</span> Packets</a>
+        <a href="#flows" data-view-link="flows" class="nav-link"><span class="nav-icon" aria-hidden="true">⇄</span> Flows</a>
+        <a href="#protocols" data-view-link="protocols" class="nav-link"><span class="nav-icon" aria-hidden="true">◉</span> Protocols</a>
+      </nav>
+      <div class="side-spacer"></div>
+      <a class="nav-link upload-nav" href="/"><span class="nav-icon" aria-hidden="true">＋</span> Upload new capture</a>
+      <a class="nav-link" href="#about" data-view-link="about"><span class="nav-icon" aria-hidden="true">ⓘ</span> About project</a>
+      <a class="nav-link github-link" href="https://github.com/Priyanshu-Gupta27/deep-packet-analyser" target="_blank" rel="noreferrer"><span class="nav-icon github-mark" aria-hidden="true">GH</span> GitHub project <span class="external-mark" aria-hidden="true">↗</span></a>
+      <div id="sidebar-health" class="sidebar-footer"><span class="health-dot"></span><span id="sidebar-health-label">Analyzer connected</span></div>
+    </aside>
+    <div id="sidebar-scrim" class="sidebar-scrim" hidden></div>
+
+    <div class="workspace">
+      <header class="topbar">
+        <button id="menu-toggle" class="icon-button menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">☰</button>
+        <div class="breadcrumb"><span>CAPTURE</span><b>/</b><strong id="capture-name">Analysis</strong></div>
+        <div class="topbar-meta"><span class="health-pill"><i></i> Analysis complete</span><span class="topbar-divider"></span><span id="capture-packet-total">— packets</span></div>
+      </header>
+      <main id="view-content" class="view-content" tabindex="-1">
+        <section id="view-overview" class="view" aria-labelledby="overview-title">
+          <div class="page-heading">
+            <div><div class="eyebrow">CAPTURE SUMMARY</div><h1 id="overview-title">Overview</h1><p class="page-subtitle">A high-level view of the traffic in this capture.</p></div>
+            <div class="capture-chip"><span class="capture-chip-icon">PC</span><span><small>ANALYZED FILE</small><strong id="overview-filename">—</strong></span></div>
+          </div>
+          <div id="summary-cards" class="summary-grid" aria-live="polite"></div>
+          <div class="overview-grid">
+            <article class="panel protocol-panel"><div class="panel-heading"><div><h2>Protocol distribution</h2><p>Detected application protocol labels</p></div><a class="text-link" href="#protocols">View all <span aria-hidden="true">→</span></a></div><div id="overview-protocol-chart" class="donut-layout"></div></article>
+            <article class="panel timeline-panel"><div class="panel-heading"><div><h2>Traffic over time</h2><p>Packets grouped by capture second</p></div><span class="panel-tag">PACKETS / SEC</span></div><div id="overview-timeline" class="line-chart"></div></article>
+            <article class="panel"><div class="panel-heading"><div><h2>Top source addresses</h2><p>Packets sent by source</p></div></div><div id="overview-sources" class="rank-list"></div></article>
+            <article class="panel"><div class="panel-heading"><div><h2>Top destination addresses</h2><p>Packets received by destination</p></div></div><div id="overview-destinations" class="rank-list"></div></article>
+            <article class="panel ports-panel"><div class="panel-heading"><div><h2>Top ports</h2><p>Source and destination port appearances</p></div></div><div id="overview-ports" class="rank-list"></div></article>
+          </div>
+        </section>
+
+        <section id="view-packets" class="view" aria-labelledby="packets-title" hidden>
+          <div class="page-heading"><div><div class="eyebrow">CAPTURE RECORDS</div><h1 id="packets-title">Packet explorer</h1><p class="page-subtitle">Search, sort, and inspect individual captured packets.</p></div><span class="result-total" id="packet-count-heading">— packets</span></div>
+          <article class="panel packet-panel">
+            <div class="filter-toolbar">
+              <label class="search-field"><span class="sr-only">Search packets</span><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Search addresses, protocol, info…" autocomplete="off"></label>
+              <label><span class="sr-only">Filter by protocol</span><select id="protocol"><option value="">All protocols</option></select></label>
+              <label><span class="sr-only">Filter source IP</span><input id="src" type="search" placeholder="Source IP"></label>
+              <label><span class="sr-only">Filter destination IP</span><input id="dst" type="search" placeholder="Destination IP"></label>
+              <label><span class="sr-only">Filter port</span><input id="port" type="search" inputmode="numeric" placeholder="Port"></label>
+              <button id="clear-filters" class="button button-quiet" type="button">Clear filters</button>
+            </div>
+            <div class="table-caption"><span id="packet-range">Showing 0–0 of 0 packets</span><span id="packet-sort-caption">Sort by packet number</span></div>
+            <div class="table-scroll"><table class="data-table packet-table"><thead><tr>
+              <th><button data-sort="number" class="sort-button" type="button"># <span>↕</span></button></th>
+              <th><button data-sort="timestamp" class="sort-button" type="button">Time <span>↕</span></button></th>
+              <th><button data-sort="src_ip" class="sort-button" type="button">Source <span>↕</span></button></th>
+              <th>Src port</th>
+              <th><button data-sort="dst_ip" class="sort-button" type="button">Destination <span>↕</span></button></th>
+              <th>Dst port</th>
+              <th><button data-sort="transport" class="sort-button" type="button">Transport <span>↕</span></button></th>
+              <th><button data-sort="application" class="sort-button" type="button">Application <span>↕</span></button></th>
+              <th><button data-sort="length" class="sort-button" type="button">Length <span>↕</span></button></th>
+              <th>Info</th><th><span class="sr-only">Details</span></th>
+            </tr></thead><tbody id="packet-rows"></tbody></table></div>
+            <div id="packet-empty" class="empty-state" hidden><span class="empty-icon">⌕</span><strong>No packets match these filters</strong><p>Clear or adjust your filters to see more results.</p><button class="button button-outline" type="button" data-clear-filters>Clear filters</button></div>
+            <div class="table-footer"><span id="packet-page-label">Page 1 of 1</span><div class="pagination"><button id="prev" class="button button-quiet" type="button" aria-label="Previous page">← Previous</button><button id="next" class="button button-quiet" type="button" aria-label="Next page">Next →</button></div></div>
+          </article>
+          <aside id="packet-detail" class="detail-panel" aria-labelledby="detail-title" hidden><div class="detail-heading"><div><div class="eyebrow">PACKET DETAILS</div><h2 id="detail-title">Packet</h2></div><button id="close-detail" class="icon-button" type="button" aria-label="Close packet details">×</button></div><dl id="detail-fields" class="detail-fields"></dl></aside>
+        </section>
+
+        <section id="view-flows" class="view" aria-labelledby="flows-title" hidden>
+          <div class="page-heading"><div><div class="eyebrow">CONVERSATION SUMMARY</div><h1 id="flows-title">Network flows</h1><p class="page-subtitle">Directional conversations grouped by source, destination, ports, and transport.</p></div><span class="result-total" id="flow-count">— flows</span></div>
+          <article class="panel flow-panel"><div class="table-caption"><span id="flow-table-caption">Flow records from this capture</span><span>FIVE-TUPLE GROUPING</span></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Source endpoint</th><th>Destination endpoint</th><th>Transport</th><th>Application</th><th>Packets</th><th>Bytes</th></tr></thead><tbody id="flow-rows"></tbody></table></div><div id="flow-empty" class="empty-state" hidden><span class="empty-icon">⇄</span><strong>No flows available</strong><p>No parsed flow records were returned for this capture.</p></div></article>
+        </section>
+
+        <section id="view-protocols" class="view" aria-labelledby="protocols-title" hidden>
+          <div class="page-heading"><div><div class="eyebrow">APPLICATION CLASSIFICATION</div><h1 id="protocols-title">Protocols</h1><p class="page-subtitle">Application labels detected by the existing DPI extractors and hostname classifier.</p></div><span class="result-total" id="protocol-count">— categories</span></div>
+          <article class="panel protocol-detail-panel"><div class="panel-heading"><div><h2>Protocol distribution</h2><p>Packet count and share of all analyzed packets</p></div><button id="protocol-chart-filter" class="button button-quiet" type="button">Open packet explorer</button></div><div id="protocol-full-chart" class="donut-layout donut-large"></div></article>
+          <article class="panel protocol-table-panel"><div class="panel-heading"><div><h2>Detected categories</h2><p>Byte totals are not exposed by the analyzer's protocol summary.</p></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Protocol</th><th>Packets</th><th>Share</th><th>Bytes</th><th>Packet view</th></tr></thead><tbody id="protocol-rows"></tbody></table></div><div id="protocol-empty" class="empty-state" hidden><span class="empty-icon">◉</span><strong>No protocol data available</strong><p>This capture did not return protocol classification data.</p></div></article>
+        </section>
+
+        <section id="view-about" class="view" aria-labelledby="about-title" hidden>
+          <div class="page-heading"><div><div class="eyebrow">PROJECT INFORMATION</div><h1 id="about-title">About this analyzer</h1><p class="page-subtitle">A web interface for the repository's existing C++ packet analysis engine.</p></div></div>
+          <article class="panel about-panel"><div class="about-mark">D</div><div><h2>Deep Packet Analyzer</h2><p>Inspect network captures using the project's real packet reader, parser, DPI protocol extractors, and application classifier.</p><div class="architecture-flow"><span>Web browser</span><b>→</b><span>FastAPI</span><b>→</b><span>C++ adapter</span><b>→</b><span>PCAP parser</span></div></div></article>
+          <div class="about-grid"><article class="panel"><h2>What it analyzes</h2><ul><li>Classic Ethernet PCAP captures</li><li>IPv4, TCP, UDP, and basic ICMP identification</li><li>Packet records and directional flow summaries</li><li>HTTP Host, DNS query, and visible TLS SNI metadata</li></ul></article><article class="panel limitation-panel"><h2>Known limitations</h2><ul><li>PCAPNG is not supported</li><li>IPv6 and VLAN-tagged traffic are not parsed</li><li>No TCP stream reassembly</li><li>Application bytes and payload contents are not displayed</li><li>Analysis results are held in backend memory</li></ul></article></div>
+          <a class="button button-outline about-github" href="https://github.com/Priyanshu-Gupta27/deep-packet-analyser" target="_blank" rel="noreferrer">View project on GitHub <span aria-hidden="true">↗</span></a>
+        </section>
+        <div id="global-error" class="inline-error" role="alert" hidden></div>
+      </main>
+      <footer class="workspace-footer"><span>DEEP PACKET ANALYZER</span><span>Analysis powered by the repository's C++ parser</span></footer>
+    </div>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

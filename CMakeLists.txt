@@ -18,6 +18,17 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # Create the executable
 add_executable(packet_analyzer ${SOURCES})
 
+# JSON-lines analysis adapter used by the web API. Reuses the existing parser
+# and DPI protocol extractors; it does not invoke the blocking/output engine.
+add_executable(dpi_web_analyzer
+    src/web_analyzer.cpp
+    src/pcap_reader.cpp
+    src/packet_parser.cpp
+    src/sni_extractor.cpp
+    src/types.cpp
+)
+target_include_directories(dpi_web_analyzer PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
 # For macOS, we might need to link against system libraries later
 if(APPLE)
     # Add any macOS-specific settings here
